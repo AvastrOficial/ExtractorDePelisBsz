@@ -8,3 +8,6 @@ al sleecion de 2 puedes inplementar copiar solo la pagina de categoria y coipiar
 <br>
 al selecionar el 3 podras generar automaticamente las paginas de la categoria que deceas tener y convertirlo en la lsita ocupantes de la opcion 2 
 ![image](https://github.com/user-attachments/assets/f41d6a8f-10ea-42ee-8cc0-45c714e6406b)
+
+<br>
+pip install beautifulsoup4
