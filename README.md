@@ -11,3 +11,7 @@ al selecionar el 3 podras generar automaticamente las paginas de la categoria qu
 
 <br>
 pip install beautifulsoup4
+
+
+series : 
+<img width="867" height="654" alt="image" src="https://github.com/user-attachments/assets/4b2e14e5-f18d-40e3-8d04-2292875a7600" />
