@@ -75,12 +75,12 @@ def extract_episodes_from_series(series_url):
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, 'html.parser')
-        
+
         episodes_data = {}
-        
+
         # Buscar selector de temporadas
         season_select = soup.find('select', id='select-season')
-        
+
         if season_select:
             # Extraer todas las temporadas
             season_options = season_select.find_all('option')
@@ -90,10 +90,10 @@ def extract_episodes_from_series(series_url):
                 season_value = option.get('value', '').strip()
                 if season_value:
                     season_id = f"season-{season_value}"
-                    
+
                     # Buscar la lista de episodios para esta temporada
                     episodes_list = soup.find('ul', id=season_id, class_='all-episodes')
-                    
+
                     if episodes_list:
                         episodes = extract_episodes_from_ul(episodes_list, series_url)
                         if episodes:
@@ -115,7 +115,7 @@ def extract_episodes_from_series(series_url):
             if not episodes_list:
                 # Intentar con otra clase
                 episodes_list = soup.find('ul', class_='episodes')
-            
+
             if episodes_list:
                 episodes = extract_episodes_from_ul(episodes_list, series_url)
                 if episodes:
@@ -136,11 +136,11 @@ def extract_episodes_from_ul(episodes_list, base_url):
 
     # Buscar todos los items de episodio
     episode_items = episodes_list.find_all('li', class_=lambda x: x and 'TPost' in x)
-    
+
     if not episode_items:
         # Intentar con cualquier li
         episode_items = episodes_list.find_all('li')
-    
+
     print(f"    Encontrados {len(episode_items)} items de episodio")
 
     for item in episode_items:
@@ -153,7 +153,7 @@ def extract_episodes_from_ul(episodes_list, base_url):
             episode_path = link_tag.get('href', '')
             if not episode_path:
                 continue
-                
+
             # Completar la URL si es relativa
             episode_url = urljoin(base_url, episode_path)
 
@@ -161,7 +161,7 @@ def extract_episodes_from_ul(episodes_list, base_url):
             title_tag = item.find('h2', class_='Title')
             if not title_tag:
                 title_tag = item.find('h2')
-            
+
             episode_title = title_tag.text.strip() if title_tag else ""
 
             # Extraer número de episodio
@@ -216,7 +216,7 @@ def extract_series_from_listing_page(page_url, extract_episodes=False):
 
         # Buscar en contenedores TPost (que contienen series)
         series_containers = soup.find_all('div', class_='TPost')
-        
+
         for container in series_containers:
             try:
                 link_tag = container.find('a')
@@ -233,7 +233,7 @@ def extract_series_from_listing_page(page_url, extract_episodes=False):
         # Procesar cada serie
         for idx, series_url in enumerate(series_links, 1):
             print(f"    [{idx}/{len(series_links)}] Procesando serie...")
-            
+
             try:
                 # Extraer datos básicos
                 series_data = extract_series_data(series_url)
@@ -247,7 +247,7 @@ def extract_series_from_listing_page(page_url, extract_episodes=False):
                             print(f"      ✅ {sum(len(eps) for eps in episodes.values())} episodios extraídos")
                         else:
                             print(f"      ⚠️ No se encontraron episodios")
-                    
+
                     series_list.append(series_data)
                     print(f"      ✅ '{series_data['title'][:30]}...' extraída")
                 else:
@@ -306,7 +306,7 @@ elif option == '1':
     print("\n📺 ¿Deseas extraer también los episodios de cada serie?")
     print("   Esto tomará MUCHO más tiempo (1-2 segundos por serie)")
     print("   pero obtendrás la información completa de temporadas y episodios.")
-    
+
     episodes_choice = input("   ¿Extraer episodios? (s/n): ").strip().lower()
     if episodes_choice == 's':
         extract_episodes_option = True
@@ -322,7 +322,7 @@ if option == '1':
     print("\n📥 Introduce URLs de páginas de listado (separadas por comas):")
     print("   Ejemplo: https://ww9.cuevana3.to/serie/")
     print("            https://ww9.cuevana3.to/serie/page/2")
-    
+
     if extract_episodes_option:
         print("\n   💡 CONSEJO: Procesa solo 1-2 páginas para no sobrecargar el servidor.")
 else:
@@ -527,24 +527,24 @@ for url_index, url in enumerate(urls_list, 1):
     print(f"📁 PROCESANDO URL {url_index}/{len(urls_list)}")
     print(f"🔗 {url}")
     print('='*60)
-    
+
     url_series_data = []
-    
+
     if option == '1':
         # Extraer series de página de listado
         print(f"⏳ Extrayendo series de la página de listado...")
         series_from_page = extract_series_from_listing_page(url, extract_episodes_option)
-        
+
         if series_from_page:
             url_series_data.extend(series_from_page)
-            
+
             # Contar episodios si se extrajeron
             episodes_count = 0
             for series in series_from_page:
                 if 'episodes' in series:
                     for season_episodes in series['episodes'].values():
                         episodes_count += len(season_episodes)
-            
+
             if extract_episodes_option and episodes_count > 0:
                 print(f"✅ {len(series_from_page)} series con {episodes_count} episodios extraídos")
             else:
@@ -564,66 +564,66 @@ for url_index, url in enumerate(urls_list, 1):
                     print(f"✅ Serie con {episodes_count} episodios extraída")
                 else:
                     print(f"⚠️ Serie sin episodios encontrados")
-            
+
             url_series_data.append(series_data)
             print(f"✅ Serie '{series_data['title']}' extraída")
-    
+
     # Si se extrajeron series de esta URL, guardar archivo individual
     if url_series_data:
         # Organizar por año para esta URL específica
         url_series_by_year = organize_by_year(url_series_data)
-        
+
         # Guardar archivo JSON individual
         json_filename = f"{url_index}.json"
         save_to_json(url_series_by_year, json_filename)
         individual_files.append(json_filename)
-        
+
         print(f"💾 Datos guardados en: {json_filename}")
-        
+
         # Agregar al total combinado
         all_series_data.extend(url_series_data)
         total_series_count += len(url_series_data)
-        
+
         # Agregar al HTML
         html_content += f'<div class="url-section">\n'
         html_content += f'<div class="url-header">\n'
         html_content += f'<h2 class="url-title">📦 Fuente {url_index}: {url[:50]}...</h2>\n'
         html_content += f'<a href="{json_filename}" class="json-link" target="_blank">📥 Descargar JSON</a>\n'
         html_content += f'</div>\n'
-        
+
         # Estadísticas de esta URL
         total_url_series = len(url_series_data)
         total_url_years = len(url_series_by_year)
-        
+
         # Contar episodios para esta URL
         url_episodes_count = 0
         for series in url_series_data:
             if 'episodes' in series:
                 for season_episodes in series['episodes'].values():
                     url_episodes_count += len(season_episodes)
-        
+
         html_content += f'<div class="stats">\n'
         html_content += f'<div class="stat"><span class="number">{total_url_series}</span><span class="label">Series</span></div>\n'
         html_content += f'<div class="stat"><span class="number">{total_url_years}</span><span class="label">Años</span></div>\n'
         if url_episodes_count > 0:
             html_content += f'<div class="stat"><span class="number">{url_episodes_count}</span><span class="label">Episodios</span></div>\n'
         html_content += f'</div>\n'
-        
+
         # Mostrar series
         html_content += f'<div class="series-grid">\n'
-        
+
         for series in url_series_data:
             has_episodes = 'episodes' in series and series['episodes']
-            
+
             html_content += f'<div class="series-card">\n'
             html_content += f'<img src="{series.get("image_url", "")}" alt="{series["title"]}" class="series-img" onerror="this.src=\'https://via.placeholder.com/300x400/333/fff?text=No+Image\'">\n'
             html_content += f'<div class="series-info">\n'
             html_content += f'<h3 class="series-title">{series["title"]}</h3>\n'
             html_content += f'<div class="series-meta">Año: {series.get("year", "N/A")} | Rating: {series.get("rating", "N/A")}</div>\n'
-            
+
             if series.get('description'):
                 html_content += f'<div class="series-desc">{series["description"][:150]}...</div>\n'
-            
+
             if has_episodes:
                 episodes_html = ""
                 for season_id, episodes in series['episodes'].items():
@@ -632,30 +632,30 @@ for url_index, url in enumerate(urls_list, 1):
                     for episode in episodes[:5]:  # Mostrar solo 5 episodios
                         ep_title = episode["title"][:40] + "..." if len(episode["title"]) > 40 else episode["title"]
                         episodes_html += f'<li class="episode-item"><a href="{episode["url"]}" class="episode-link" target="_blank">{episode["episode_number"]} - {ep_title}</a></li>\n'
-                    
+
                     if len(episodes) > 5:
                         episodes_html += f'<li class="episode-item">... y {len(episodes) - 5} episodios más</li>\n'
-                    
+
                     episodes_html += f'</ul>\n'
-                
+
                 html_content += f'<button class="toggle-episodes" onclick="toggleEpisodes(this)">📺 Mostrar Episodios</button>\n'
                 html_content += f'<div class="episodes-section">\n'
                 html_content += episodes_html
                 html_content += f'</div>\n'
-            
+
             html_content += f'</div>\n'
             html_content += f'</div>\n'
-        
+
         html_content += f'</div>\n'  # Cerrar series-grid
         html_content += f'</div>\n'  # Cerrar url-section
-    
+
     else:
         print(f"❌ No se encontraron series en esta URL")
         html_content += f'<div class="url-section">\n'
         html_content += f'<h2 class="url-title">📦 Fuente {url_index} - Sin datos</h2>\n'
         html_content += f'<p style="color: #ff6b6b;">⚠️ No se encontraron series en esta URL</p>\n'
         html_content += f'</div>\n'
-    
+
     # Pausa entre URLs
     if url_index < len(urls_list):
         print(f"⏳ Esperando 3 segundos...")
@@ -666,7 +666,7 @@ if len(individual_files) > 1 and all_series_data:
     combined_series_by_year = organize_by_year(all_series_data)
     save_to_json(combined_series_by_year, 'todas_las_series.json')
     print(f"\n✅ Archivo combinado guardado en: todas_las_series.json")
-    
+
     # Agregar resumen al HTML
     html_content += f'<div class="summary">\n'
     html_content += f'<h2 class="summary-title">📊 RESUMEN TOTAL</h2>\n'
@@ -721,7 +721,7 @@ if individual_files:
     print("\n📄 Archivos JSON generados:")
     for json_file in individual_files:
         print(f"  • {json_file}")
-    
+
     if len(individual_files) > 1:
         print(f"  • todas_las_series.json (combinado)")
 
